@@ -1,0 +1,22 @@
+
+config sensor 'globals'
+	option default_memo 'Sensor'
+	list status '0.Норма'
+	list status '1.Таймаут'
+	list status '2.Ошибка'
+	option default_timeout '5'
+	option default_period '1'
+
+config sensor 'id_sensor'
+	option memo 'Sensor'
+	option unit ''
+	option precision '0'
+	option proto 'SNMP'
+	option community '0'
+	option address '0'
+	option port '0'
+	option oid '0'
+	option type_oid '0'
+	option timeout '5'
+	option period '1'
+
