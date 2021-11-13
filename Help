@@ -1,0 +1,2 @@
+This module receives, stores and outputs values from sensors.
+Sensors can be local and outlying (sensors for temperature, humidity, etc.)

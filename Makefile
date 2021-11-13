@@ -12,6 +12,10 @@ CONF_DIR=/etc/config/
 ETC_FILES=owrt_sensor_value.py
 ETC_FILES_DIR=/etc/netping_sensor_value/
 
+CLI_COMMANDS_DIR=commands
+CLI_HELP_FILE=Help
+CLI_CONFIGNAME=Configname
+
 .PHONY: all install
 
 all: install
@@ -20,6 +24,7 @@ install:
 	for f in $(CONF_FILES); do cp $${f} $(CONF_DIR); done
 	mkdir $(ETC_FILES_DIR)
 	for f in $(ETC_FILES); do cp etc/$${f} $(ETC_FILES_DIR); done
+	cp -r $(CLI_COMMANDS_DIR) $(CLI_HELP_FILE) $(CLI_CONFIGNAME) $(ETC_FILES_DIR)
 
 clean:
 	for f in $(CONF_FILES); do rm -f $(CONF_DIR)$${f}; done
