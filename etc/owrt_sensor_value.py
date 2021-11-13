@@ -17,6 +17,42 @@ snmp_pr = snmp_protocol()
 uci_config_sensor = "owrt_sensor_value"
 lock_curr_sensors = Lock()
 
+
+def ubus_init():
+    def get_value_callback(event, data):
+        ret_val = {}
+        sect = data['id_sensor']
+        lock_curr_sensors.acquire()
+        try:
+            sensor_dict = curr_sensors[sect]
+        except KeyError:
+            # poll sensor with id_sensor not found
+            journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                             "get_value_callback() id_sensor " + sect + " not found")
+            ret_val["value"] = '-999999'
+            ret_val["unit"] = ''
+            ret_val["status"] = '-2'
+        else:
+            # set the number of decimal places to result
+            ret_val["value"] = f"{sensor_dict['value']:.{int(sensor_dict['precision'])}f}"
+            ret_val["unit"] = sensor_dict['unit']
+            ret_val["status"] = sensor_dict['status']
+        finally:
+            lock_curr_sensors.release()
+            event.reply(ret_val)
+
+    ubus.add(
+        'owrt_sensor_value', {
+            'get_value': {
+                'method': get_value_callback,
+                'signature': {
+                    'id_sensor': ubus.BLOBMSG_TYPE_STRING
+                }
+            }
+        }
+    )
+
+
 def check_param_snmp(param):
     try:
         address = param['address']
@@ -93,7 +129,7 @@ def poll_value(sensor):
 
     value, status = snmp_pr.get_snmp_poll(id_poll)
 
-    config_sensor['value'] = value
+    config_sensor['value'] = float(value)
     config_sensor['status'] = status
 
     lock_curr_sensors.release()
@@ -106,6 +142,7 @@ if __name__ == '__main__':
 
     journal.WriteLog("OWRT_Sensor_value", "Normal", "notice", "Start module!")
 
+    ubus_init()
     parseconfig()
 
     lock_curr_sensors.acquire()
