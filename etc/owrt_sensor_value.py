@@ -92,6 +92,131 @@ def parseconfig():
                 lock_curr_sensors.release()
 
 
+def diff_param_sensor(config, protodict):
+    try:
+        if config['unit'] == protodict['unit'] and config['precision'] == protodict['precision'] and \
+                config['proto'] == protodict['proto']:
+            return False
+        else:
+            return True
+    except KeyError:
+        return True
+
+
+def diff_param_poll_snmp(config, protodict):
+    try:
+        if config['address'] == protodict['address'] and config['community'] == protodict['community'] and \
+            config['oid'] == protodict['oid'] and config['port'] == protodict['port'] and \
+            config['timeout'] == protodict['timeout'] and config['period'] == protodict['period']:
+            return False
+        else:
+            return True
+    except KeyError:
+        return True
+
+
+def check_edit_sensor(conf_proto):
+    for protodict in list(conf_proto[0]['values'].values()):
+        if protodict['.type'] == "info":
+            config = curr_sensors.get(protodict['.name'])
+            if config is not None:
+                lock_curr_sensors.acquire()
+                if not diff_param_sensor(config, protodict):
+                    if protodict['proto'] == "SNMP":
+                        if not diff_param_poll_snmp(config, protodict):
+                            lock_curr_sensors.release()
+                            continue
+                    else:
+                        lock_curr_sensors.release()
+                        continue
+
+                # Edit sensor
+                if config['proto'] == "SNMP":
+                    snmp_pr.stop_snmp_poll(config['id_task'])
+                    journal.WriteLog("OWRT_Sensor_value", "Normal", "notice",
+                                     "Edit sensor: stop polling sensor " + config['.name'])
+                    del curr_sensors[config['.name']]
+
+                if protodict['proto'] == "SNMP":
+                    if not check_param_snmp(protodict):
+                        lock_curr_sensors.release()
+                        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                                         "check_edit_sensor() error parameters SNMP " + protodict['.name'])
+                        continue
+
+                    protodict['status'] = '-1'
+                    protodict['value'] = '-999999'
+                    curr_sensors[protodict['.name']] = protodict
+                    lock_curr_sensors.release()
+
+                    # Run polling thread on SNMP
+                    thrd = Thread(target=run_poll_sensor, args=(protodict['.name'], ))
+                    thrd.start()
+                else:
+                    lock_curr_sensors.release()
+
+
+def check_add_sensor(conf_proto):
+    for protodict in list(conf_proto[0]['values'].values()):
+        if protodict['.type'] == "info":
+            config = curr_sensors.get(protodict['.name'])
+            if config is None:
+                # Add new sensor
+                lock_curr_sensors.acquire()
+                protodict['status'] = '-1'
+                protodict['value'] = '-999999'
+                curr_sensors[protodict['.name']] = protodict
+                lock_curr_sensors.release()
+
+                # Run polling thread on SNMP
+                thrd = Thread(target=run_poll_sensor, args=(protodict['.name'], ))
+                thrd.start()
+
+
+def check_del_sensor(conf_proto):
+    lock_curr_sensors.acquire()
+    sensors = list(curr_sensors.keys())
+    for sensor in sensors:
+        sensor_exists = False
+        for protodict in list(conf_proto[0]['values'].values()):
+            if protodict['.type'] == "info":
+                try:
+                    if protodict['.name'] == sensor:
+                        sensor_exists = True
+                        break
+                except KeyError:
+                    pass
+
+        if sensor_exists == False:
+            try:
+                # Deleting sensor
+                config = curr_sensors.pop(sensor)
+                snmp_pr.stop_snmp_poll(config['id_task'])
+                journal.WriteLog("OWRT_Sensor_value", "Normal", "notice",
+                                 "Deleting sensor: stop polling sensor " + config['.name'])
+            except KeyError:
+                journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                                 "reparseconfig(): Deleting sensor:  not found " + sensor)
+                continue
+    lock_curr_sensors.release()
+
+
+def reparseconfig(event, data):
+    global fl_run_main
+    if data['config'] == uci_config_sensor:
+        try:
+            conf_proto = ubus.call("uci", "get", {"config": uci_config_sensor})
+        except RuntimeError:
+            journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                             "reparseconfig() error get " + uci_config_sensor)
+            fl_run_main = False
+            return
+
+        check_edit_sensor(conf_proto)
+        check_add_sensor(conf_proto)
+        check_del_sensor(conf_proto)
+
+
 def run_poll_sensor(sensor):
     lock_curr_sensors.acquire()
     config_sensor = curr_sensors.get(sensor)
@@ -106,11 +231,13 @@ def run_poll_sensor(sensor):
             lock_curr_sensors.release()
             return
 
-    id_poll = snmp_pr.start_snmp_poll(config_sensor['address'], config_sensor['community'], config_sensor['oid'],
-                                      config_sensor['port'], config_sensor['timeout'], config_sensor['period'])
-    config_sensor['id_task'] = id_poll
-    lock_curr_sensors.release()
-    journal.WriteLog("OWRT_Sensor_value", "Normal", "notice", "start polling sensor " + sensor)
+        id_poll = snmp_pr.start_snmp_poll(config_sensor['address'], config_sensor['community'], config_sensor['oid'],
+                                          config_sensor['port'], config_sensor['timeout'], config_sensor['period'])
+        config_sensor['id_task'] = id_poll
+        lock_curr_sensors.release()
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "notice", "start polling sensor " + sensor)
+    else:
+        lock_curr_sensors.release()
 
 
 def poll_value(sensor):
@@ -152,6 +279,8 @@ if __name__ == '__main__':
         th = Thread(target=run_poll_sensor, args=(sensor,))
         th.start()
 
+    ubus.listen(("commit", reparseconfig))
+
     try:
         while fl_run_main:
             ubus.loop(1)
@@ -162,8 +291,10 @@ if __name__ == '__main__':
                 poll_value(sensor)
                 ubus.loop(1)
     except KeyboardInterrupt:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "notice", "Stop module!")
+        pass
     finally:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "notice", "Stop module!")
+
         if not lock_curr_sensors.locked():
             lock_curr_sensors.acquire()
         sensors = list(curr_sensors.keys())
