@@ -1,9 +1,26 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 from owrt_snmp_protocol import snmp_protocol
 from threading import Thread, Lock
 from journal import journal
+
+# Checking that there is no warning
+# UserWarning: Can not find any timezone configuration, defaulting to UTC.
+try:
+    if os.environ['TZ']:
+        pass
+except KeyError:
+    os.environ['TZ'] = 'Europe/Moscow'
+finally:
+    import ebnf.ebnf_unit
+    import ebnf.ebnf_precision
+    import ebnf.ebnf_proto
+    import ebnf.ebnf_ip_addr
+    import ebnf.ebnf_port
+    import ebnf.ebnf_oid
+    import ebnf.ebnf_secmilisec
 
 try:
     import ubus
@@ -53,17 +70,111 @@ def ubus_init():
     )
 
 
-def check_param_snmp(param):
+def check_param_basic(param):
+    res = True
+
     try:
-        address = param['address']
-        port = param['port']
-        oid = param['oid']
-        period = param['period']
-        community = param['community']
-        timeout = param['timeout']
+        ebnf.ebnf_unit.parse(param['unit'])
     except KeyError:
-        return False
-    return True
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_basic() id_sensor: " + param['.name'] + " not found 'unit'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_basic() id_sensor: " + param['.name'] + " EBNF check ERROR unit: " + param['unit'])
+        res = False
+
+    try:
+        ebnf.ebnf_precision.parse(param['precision'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_basic() id_sensor: " + param['.name'] + " not found 'precision'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_basic() id_sensor: " + param['.name'] + " EBNF check ERROR precision: " + param['precision'])
+        res = False
+
+    try:
+        ebnf.ebnf_proto.parse(param['proto'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_basic() id_sensor: " + param['.name'] + " not found 'proto'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_basic() id_sensor: " + param['.name'] + " EBNF check ERROR proto: " + param['proto'])
+        res = False
+
+    return res
+
+
+def check_param_snmp(param):
+    res = True
+
+    try:
+        community = param['community']
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'community'")
+        res = False
+
+    try:
+        ebnf.ebnf_ip_addr.parse(param['address'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'address'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR address: " + param['address'])
+        res = False
+
+    try:
+        ebnf.ebnf_port.parse(param['port'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'port'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR port: " + param['port'])
+        res = False
+
+    try:
+        ebnf.ebnf_oid.parse(param['oid'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'oid'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR oid: " + param['oid'])
+        res = False
+
+    try:
+        ebnf.ebnf_secmilisec.parse(param['period'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'period'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR period: " + param['period'])
+        res = False
+
+    try:
+        ebnf.ebnf_secmilisec.parse(param['timeout'])
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'timeout'")
+        res = False
+    except:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR timeout: " + param['timeout'])
+        res = False
+
+    return res
 
 
 def parseconfig():
@@ -79,6 +190,10 @@ def parseconfig():
 
     for confdict in list(confvalues[0]['values'].values()):
         if confdict['.type'] == "info":
+            if not check_param_basic(confdict):
+                journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                                 "parseconfig() error parameters basic " + confdict['.name'])
+                continue
             if confdict['proto'] == "SNMP":
                 if not check_param_snmp(confdict):
                     journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
@@ -106,8 +221,8 @@ def diff_param_sensor(config, protodict):
 def diff_param_poll_snmp(config, protodict):
     try:
         if config['address'] == protodict['address'] and config['community'] == protodict['community'] and \
-            config['oid'] == protodict['oid'] and config['port'] == protodict['port'] and \
-            config['timeout'] == protodict['timeout'] and config['period'] == protodict['period']:
+                config['oid'] == protodict['oid'] and config['port'] == protodict['port'] and \
+                config['timeout'] == protodict['timeout'] and config['period'] == protodict['period']:
             return False
         else:
             return True
@@ -137,6 +252,12 @@ def check_edit_sensor(conf_proto):
                                      "Edit sensor: stop polling sensor " + config['.name'])
                     del curr_sensors[config['.name']]
 
+                if not check_param_basic(protodict):
+                    lock_curr_sensors.release()
+                    journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                                     "check_edit_sensor() error parameters basic " + protodict['.name'])
+                    continue
+
                 if protodict['proto'] == "SNMP":
                     if not check_param_snmp(protodict):
                         lock_curr_sensors.release()
@@ -150,7 +271,7 @@ def check_edit_sensor(conf_proto):
                     lock_curr_sensors.release()
 
                     # Run polling thread on SNMP
-                    thrd = Thread(target=run_poll_sensor, args=(protodict['.name'], ))
+                    thrd = Thread(target=run_poll_sensor, args=(protodict['.name'],))
                     thrd.start()
                 else:
                     lock_curr_sensors.release()
@@ -162,15 +283,26 @@ def check_add_sensor(conf_proto):
             config = curr_sensors.get(protodict['.name'])
             if config is None:
                 # Add new sensor
-                lock_curr_sensors.acquire()
-                protodict['status'] = '-1'
-                protodict['value'] = '-999999'
-                curr_sensors[protodict['.name']] = protodict
-                lock_curr_sensors.release()
+                if not check_param_basic(protodict):
+                    journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                                     "check_add_sensor() error parameters basic " + protodict['.name'])
+                    continue
 
-                # Run polling thread on SNMP
-                thrd = Thread(target=run_poll_sensor, args=(protodict['.name'], ))
-                thrd.start()
+                if protodict['proto'] == "SNMP":
+                    if not check_param_snmp(protodict):
+                        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                                         "check_add_sensor() error parameters SNMP " + protodict['.name'])
+                        continue
+
+                    lock_curr_sensors.acquire()
+                    protodict['status'] = '-1'
+                    protodict['value'] = '-999999'
+                    curr_sensors[protodict['.name']] = protodict
+                    lock_curr_sensors.release()
+
+                    # Run polling thread on SNMP
+                    thrd = Thread(target=run_poll_sensor, args=(protodict['.name'],))
+                    thrd.start()
 
 
 def check_del_sensor(conf_proto):
@@ -212,8 +344,8 @@ def reparseconfig(event, data):
             fl_run_main = False
             return
 
-        check_edit_sensor(conf_proto)
         check_add_sensor(conf_proto)
+        check_edit_sensor(conf_proto)
         check_del_sensor(conf_proto)
 
 
@@ -226,11 +358,6 @@ def run_poll_sensor(sensor):
         return
 
     if config_sensor['proto'] == "SNMP":
-        if not check_param_snmp(config_sensor):
-            del curr_sensors[sensor]
-            lock_curr_sensors.release()
-            return
-
         id_poll = snmp_pr.start_snmp_poll(config_sensor['address'], config_sensor['community'], config_sensor['oid'],
                                           config_sensor['port'], config_sensor['timeout'], config_sensor['period'])
         config_sensor['id_task'] = id_poll
