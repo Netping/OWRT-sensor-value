@@ -7,7 +7,7 @@ config sensor 'globals'
 	option default_timeout '5'
 	option default_period '1'
 
-config sensor 'id_sensor'
+config sensor 'sensor_prototype_snmp'
 	option memo 'Sensor'
 	option unit ''
 	option precision '0'
