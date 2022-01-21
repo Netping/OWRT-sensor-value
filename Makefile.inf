@@ -5,7 +5,7 @@ TITLE="OWRT_Sensor_value"
 PKG_NAME="OWRT_Sensor_value"
 PKG_VERSION="0.1"
 PKG_RELEASE=1
-PKG_DEPENDS=OWRT_Log OWRT-snmp_protocol OWRT_CLI
+PKG_DEPENDS=OWRT-log OWRT-snmp_protocol OWRT-cli
 
 CONF_FILES=owrt_sensor_value
 CONF_DIR=/etc/config/
