@@ -4,7 +4,7 @@ TITLE="OWRT-sensor-value"
 
 PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
-PKG_RELEASE=2
+PKG_RELEASE=3
 PKG_DEPENDS=OWRT-log OWRT-snmp-protocol OWRT-cli OWRT-PLIB-lark-parser
 
 CONF_FILES=owrt_sensor_value
@@ -26,12 +26,17 @@ INSTALL_DIR=
 
 .PHONY: all install
 
-all: configure build install
+all: build preinstall install configure
 
-configure:
-	@echo "Nothing to do"
+ipk: build install
 
 build:
+	@echo "Nothing to do"
+
+preinstall:
+	@echo "Nothing to do"
+
+configure:
 	@echo "Nothing to do"
 
 install:
