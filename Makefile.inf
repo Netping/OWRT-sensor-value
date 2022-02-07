@@ -1,11 +1,11 @@
 SECTION="NetPing modules"
 CATEGORY="Base"
-TITLE="OWRT_Sensor_value"
+TITLE="OWRT-sensor-value"
 
-PKG_NAME="OWRT_Sensor_value"
+PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
 PKG_RELEASE=1
-PKG_DEPENDS=OWRT-log OWRT-snmp_protocol OWRT-cli OWRT-PLIB-lark-parser
+PKG_DEPENDS=OWRT-log OWRT-snmp-protocol OWRT-cli OWRT-PLIB-lark-parser
 
 CONF_FILES=owrt_sensor_value
 CONF_DIR=/etc/config/
