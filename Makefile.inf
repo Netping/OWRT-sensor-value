@@ -4,7 +4,7 @@ TITLE="OWRT-sensor-value"
 
 PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
-PKG_RELEASE=1
+PKG_RELEASE=2
 PKG_DEPENDS=OWRT-log OWRT-snmp-protocol OWRT-cli OWRT-PLIB-lark-parser
 
 CONF_FILES=owrt_sensor_value
@@ -20,6 +20,8 @@ CLI_CONFIGNAME=Configname
 EBNF_SRC_DIR=ebnf
 EBNF_FILES_DIR=/etc/netping_sensor_value/ebnf/
 
+AUTORUN_FILES=owrt_sensor_value_autorun
+
 INSTALL_DIR=
 
 .PHONY: all install
@@ -33,6 +35,10 @@ build:
 	@echo "Nothing to do"
 
 install:
+ifneq ($(INSTALL_DIR),)
+	mkdir -p $(INSTALL_DIR)/etc/init.d
+	mkdir -p $(INSTALL_DIR)/etc/rc.d
+endif
 	mkdir -p $(INSTALL_DIR)$(CONF_DIR)
 	for f in $(CONF_FILES); do cp $${f} $(INSTALL_DIR)$(CONF_DIR); done
 	mkdir -p $(INSTALL_DIR)$(ETC_FILES_DIR)
@@ -40,7 +46,16 @@ install:
 	cp -r $(CLI_COMMANDS_DIR) $(CLI_HELP_FILE) $(CLI_CONFIGNAME) $(INSTALL_DIR)$(ETC_FILES_DIR)
 	mkdir -p $(INSTALL_DIR)$(EBNF_FILES_DIR)
 	cp $(EBNF_SRC_DIR)/*.py $(INSTALL_DIR)$(EBNF_FILES_DIR)
+	for f in $(AUTORUN_FILES); do cp $${f} $(INSTALL_DIR)/etc/init.d; done
+	mv $(INSTALL_DIR)/etc/init.d/owrt_sensor_value_autorun $(INSTALL_DIR)/etc/init.d/owrt_sensor_value
+	ln -s ../init.d/owrt_sensor_value $(INSTALL_DIR)/etc/rc.d/S90OWRT-Sensor-value
 
 clean:
-	for f in $(CONF_FILES); do rm -f $(INSTALL_DIR)$(CONF_DIR)$${f}; done
-	rm -rf $(INSTALL_DIR)$(ETC_FILES_DIR)
+ifeq ($(INSTALL_DIR),)
+	for f in $(CONF_FILES); do rm -f $(CONF_DIR)$${f}; done
+	rm -rf $(ETC_FILES_DIR)
+	rm -f /etc/init.d/owrt_sensor_value
+	rm -f /etc/rc.d/S90OWRT-Sensor-value
+else
+	rm -rf $(INSTALL_DIR)
+endif
