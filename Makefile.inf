@@ -4,7 +4,7 @@ TITLE="OWRT-sensor-value"
 
 PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
-PKG_RELEASE=4
+PKG_RELEASE=5
 PKG_DEPENDS=OWRT-log OWRT-snmp-protocol OWRT-cli OWRT-PLIB-lark-parser
 
 CONF_FILES=owrt_sensor_value
@@ -19,6 +19,8 @@ CLI_CONFIGNAME=Configname
 
 EBNF_SRC_DIR=ebnf
 EBNF_FILES_DIR=$(ETC_FILES_DIR)ebnf/
+
+TESTS_SRC_DIR=Tests
 
 AUTORUN_FILES=owrt_sensor_value_autorun
 
@@ -51,6 +53,7 @@ endif
 	cp -r $(CLI_COMMANDS_DIR) $(CLI_HELP_FILE) $(CLI_CONFIGNAME) $(INSTALL_DIR)$(ETC_FILES_DIR)
 	mkdir -p $(INSTALL_DIR)$(EBNF_FILES_DIR)
 	cp $(EBNF_SRC_DIR)/*.py $(INSTALL_DIR)$(EBNF_FILES_DIR)
+	cp -r $(TESTS_SRC_DIR) $(INSTALL_DIR)$(ETC_FILES_DIR)
 	for f in $(AUTORUN_FILES); do cp $${f} $(INSTALL_DIR)/etc/init.d; done
 	mv $(INSTALL_DIR)/etc/init.d/owrt_sensor_value_autorun $(INSTALL_DIR)/etc/init.d/owrt_sensor_value
 	ln -s ../init.d/owrt_sensor_value $(INSTALL_DIR)/etc/rc.d/S90OWRT-Sensor-value
