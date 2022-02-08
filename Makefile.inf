@@ -4,21 +4,21 @@ TITLE="OWRT-sensor-value"
 
 PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
-PKG_RELEASE=3
+PKG_RELEASE=4
 PKG_DEPENDS=OWRT-log OWRT-snmp-protocol OWRT-cli OWRT-PLIB-lark-parser
 
 CONF_FILES=owrt_sensor_value
 CONF_DIR=/etc/config/
 
 ETC_FILES=owrt_sensor_value.py
-ETC_FILES_DIR=/etc/netping_sensor_value/
+ETC_FILES_DIR=/etc/netping/$(PKG_NAME)/
 
 CLI_COMMANDS_DIR=commands
 CLI_HELP_FILE=Help
 CLI_CONFIGNAME=Configname
 
 EBNF_SRC_DIR=ebnf
-EBNF_FILES_DIR=/etc/netping_sensor_value/ebnf/
+EBNF_FILES_DIR=$(ETC_FILES_DIR)ebnf/
 
 AUTORUN_FILES=owrt_sensor_value_autorun
 
