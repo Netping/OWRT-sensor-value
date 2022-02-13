@@ -1,26 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import sys
 from owrt_snmp_protocol import snmp_protocol
 from threading import Thread, Lock
 from journal import journal
-
-# Checking that there is no warning
-# UserWarning: Can not find any timezone configuration, defaulting to UTC.
-try:
-    if os.environ['TZ']:
-        pass
-except KeyError:
-    os.environ['TZ'] = 'Europe/Moscow'
-finally:
-    import ebnf.ebnf_unit
-    import ebnf.ebnf_precision
-    import ebnf.ebnf_proto
-    import ebnf.ebnf_ip_addr
-    import ebnf.ebnf_port
-    import ebnf.ebnf_oid
-    import ebnf.ebnf_secmilisec
 
 try:
     import ubus
@@ -74,36 +57,24 @@ def check_param_basic(param):
     res = True
 
     try:
-        ebnf.ebnf_unit.parse(param['unit'])
+        unit = param['unit']
     except KeyError:
         journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
                          "check_param_basic() id_sensor: " + param['.name'] + " not found 'unit'")
         res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_basic() id_sensor: " + param['.name'] + " EBNF check ERROR unit: " + param['unit'])
-        res = False
 
     try:
-        ebnf.ebnf_precision.parse(param['precision'])
+        precision = param['precision']
     except KeyError:
         journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
                          "check_param_basic() id_sensor: " + param['.name'] + " not found 'precision'")
         res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_basic() id_sensor: " + param['.name'] + " EBNF check ERROR precision: " + param['precision'])
-        res = False
 
     try:
-        ebnf.ebnf_proto.parse(param['proto'])
+        proto = param['proto']
     except KeyError:
         journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
                          "check_param_basic() id_sensor: " + param['.name'] + " not found 'proto'")
-        res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_basic() id_sensor: " + param['.name'] + " EBNF check ERROR proto: " + param['proto'])
         res = False
 
     return res
@@ -113,6 +84,34 @@ def check_param_snmp(param):
     res = True
 
     try:
+        address = param['address']
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'address'")
+        res = False
+
+    try:
+        port = param['port']
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'port'")
+        res = False
+
+    try:
+        oid = param['oid']
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'oid'")
+        res = False
+
+    try:
+        period = param['period']
+    except KeyError:
+        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
+                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'period'")
+        res = False
+
+    try:
         community = param['community']
     except KeyError:
         journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
@@ -120,58 +119,10 @@ def check_param_snmp(param):
         res = False
 
     try:
-        ebnf.ebnf_ip_addr.parse(param['address'])
-    except KeyError:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'address'")
-        res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR address: " + param['address'])
-        res = False
-
-    try:
-        ebnf.ebnf_port.parse(param['port'])
-    except KeyError:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'port'")
-        res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR port: " + param['port'])
-        res = False
-
-    try:
-        ebnf.ebnf_oid.parse(param['oid'])
-    except KeyError:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'oid'")
-        res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR oid: " + param['oid'])
-        res = False
-
-    try:
-        ebnf.ebnf_secmilisec.parse(param['period'])
-    except KeyError:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " not found 'period'")
-        res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR period: " + param['period'])
-        res = False
-
-    try:
-        ebnf.ebnf_secmilisec.parse(param['timeout'])
+        timeout = param['timeout']
     except KeyError:
         journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
                          "check_param_snmp() id_sensor: " + param['.name'] + " not found 'timeout'")
-        res = False
-    except:
-        journal.WriteLog("OWRT_Sensor_value", "Normal", "err",
-                         "check_param_snmp() id_sensor: " + param['.name'] + " EBNF check ERROR timeout: " + param['timeout'])
         res = False
 
     return res

@@ -4,7 +4,7 @@ TITLE="OWRT-sensor-value"
 
 PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
-PKG_RELEASE=6
+PKG_RELEASE=7
 PKG_DEPENDS=OWRT-log OWRT-snmp-protocol ubus-0.1.1
 
 CONF_FILES=owrt_sensor_value
@@ -16,9 +16,6 @@ ETC_FILES_DIR=/etc/netping/$(PKG_NAME)/
 CLI_COMMANDS_DIR=commands
 CLI_HELP_FILE=Help
 CLI_CONFIGNAME=Configname
-
-EBNF_SRC_DIR=ebnf
-EBNF_FILES_DIR=$(ETC_FILES_DIR)ebnf/
 
 TESTS_SRC_DIR=Tests
 
@@ -51,8 +48,6 @@ endif
 	mkdir -p $(INSTALL_DIR)$(ETC_FILES_DIR)
 	for f in $(ETC_FILES); do cp etc/$${f} $(INSTALL_DIR)$(ETC_FILES_DIR); done
 	cp -r $(CLI_COMMANDS_DIR) $(CLI_HELP_FILE) $(CLI_CONFIGNAME) $(INSTALL_DIR)$(ETC_FILES_DIR)
-	mkdir -p $(INSTALL_DIR)$(EBNF_FILES_DIR)
-	cp $(EBNF_SRC_DIR)/*.py $(INSTALL_DIR)$(EBNF_FILES_DIR)
 	cp -r $(TESTS_SRC_DIR) $(INSTALL_DIR)$(ETC_FILES_DIR)
 	for f in $(AUTORUN_FILES); do cp $${f} $(INSTALL_DIR)/etc/init.d; done
 	mv $(INSTALL_DIR)/etc/init.d/owrt_sensor_value_autorun $(INSTALL_DIR)/etc/init.d/owrt_sensor_value
