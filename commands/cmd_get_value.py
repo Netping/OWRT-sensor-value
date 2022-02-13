@@ -15,7 +15,7 @@ def main(sensor):
         print("Failed connect to ubus")
         sys.exit(-1)
 
-    print(ubus.call("owrt_sensor_value", "get_value", {"id_sensor":sensor}))
+    print(ubus.call("owrt_sensor_value", "get_value", {"id_sensor":sensor, "ubus_rpc_session":"String"}))
 
 if __name__ == "__main__":
     main()
