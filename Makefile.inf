@@ -4,8 +4,8 @@ TITLE="OWRT-sensor-value"
 
 PKG_NAME="OWRT-sensor-value"
 PKG_VERSION="0.1"
-PKG_RELEASE=5
-PKG_DEPENDS=OWRT-log OWRT-snmp-protocol OWRT-cli OWRT-PLIB-lark-parser
+PKG_RELEASE=6
+PKG_DEPENDS=OWRT-log OWRT-snmp-protocol ubus-0.1.1
 
 CONF_FILES=owrt_sensor_value
 CONF_DIR=/etc/config/
