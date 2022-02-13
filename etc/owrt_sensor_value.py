@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import signal
 from owrt_snmp_protocol import snmp_protocol
 from threading import Thread, Lock
 from journal import journal
@@ -16,6 +17,15 @@ curr_sensors = {}
 snmp_pr = snmp_protocol()
 uci_config_sensor = "owrt_sensor_value"
 lock_curr_sensors = Lock()
+
+
+def stop_run(signum, frame):
+    global fl_run_main
+    journal.WriteLog("OWRT_Sensor_value", "Normal", "notice", "Received termination signal!")
+    fl_run_main = False
+
+
+signal.signal(signal.SIGTERM, stop_run)
 
 
 def ubus_init():
