@@ -56,7 +56,8 @@ def ubus_init():
             'get_value': {
                 'method': get_value_callback,
                 'signature': {
-                    'id_sensor': ubus.BLOBMSG_TYPE_STRING
+                    'id_sensor': ubus.BLOBMSG_TYPE_STRING,
+                    'ubus_rpc_session': ubus.BLOBMSG_TYPE_STRING
                 }
             }
         }
