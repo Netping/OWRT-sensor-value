@@ -129,7 +129,7 @@ def test_ubus_api():
 
         ubus.connect()
 
-        result = ubus.call('owrt_sensor_value', 'get_value', {"id_sensor":"td28933"})[0]
+        result = ubus.call('owrt_sensor_value', 'get_value', {"id_sensor":"td28933","ubus_rpc_session":"1"})[0]
 
         ubus.disconnect()
 
