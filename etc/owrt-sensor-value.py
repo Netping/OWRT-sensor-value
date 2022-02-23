@@ -15,7 +15,7 @@ except ImportError:
 fl_run_main = True
 curr_sensors = {}
 snmp_pr = snmp_protocol()
-uci_config_sensor = "owrt_sensor_value"
+uci_config_sensor = "owrt-sensor-value"
 lock_curr_sensors = Lock()
 
 
@@ -52,7 +52,7 @@ def ubus_init():
             event.reply(ret_val)
 
     ubus.add(
-        'owrt_sensor_value', {
+        'owrt-sensor-value', {
             'get_value': {
                 'method': get_value_callback,
                 'signature': {
