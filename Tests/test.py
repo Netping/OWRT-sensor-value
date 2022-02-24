@@ -9,7 +9,7 @@ def test_conf_existance():
     ret = False
 
     try:
-        if not os.path.isfile("/etc/config/owrt_sensor_value"):
+        if not os.path.isfile("/etc/config/owrt-sensor-value"):
             raise ValueError('Config not found')
 
         ret = True
@@ -25,7 +25,7 @@ def test_conf_valid():
     try:
         ubus.connect()
 
-        confvalues = ubus.call("uci", "get", {"config": "owrt_sensor_value"})
+        confvalues = ubus.call("uci", "get", {"config": "owrt-sensor-value"})
         for confdict in list(confvalues[0]['values'].values()):
             #check globals
             if confdict['.name'] == 'globals':
@@ -63,7 +63,7 @@ def test_running():
         ubus.connect()
 
         for l in list(ubus.objects().keys()):
-            if l == 'owrt_sensor_value':
+            if l == 'owrt-sensor-value':
                 ret = True
                 break
 
@@ -78,58 +78,58 @@ def test_ubus_api():
 
     try:
         #set config items
-        if os.system("uci set owrt_sensor_value.td28933=info"):
+        if os.system("uci set owrt-sensor-value.td28933=info"):
             raise ValueError("Can't create new section")
 
-        if os.system("uci set owrt_sensor_value.td28933.memo='Out_temperature'"):
+        if os.system("uci set owrt-sensor-value.td28933.memo='Out_temperature'"):
             raise ValueError("Can't set option memo")
 
-        if os.system("uci set owrt_sensor_value.td28933.unit='C'"):
+        if os.system("uci set owrt-sensor-value.td28933.unit='C'"):
             raise ValueError("Can't set option unit")
 
-        if os.system("uci set owrt_sensor_value.td28933.precision='2'"):
+        if os.system("uci set owrt-sensor-value.td28933.precision='2'"):
             raise ValueError("Can't set option precision")
 
-        if os.system("uci set owrt_sensor_value.td28933.proto='SNMP'"):
+        if os.system("uci set owrt-sensor-value.td28933.proto='SNMP'"):
             raise ValueError("Can't set option proto")
 
-        if os.system("uci set owrt_sensor_value.td28933.community='ping32'"):
+        if os.system("uci set owrt-sensor-value.td28933.community='ping32'"):
             raise ValueError("Can't set option community")
 
-        if os.system("uci set owrt_sensor_value.td28933.address='125.227.188.172'"):
+        if os.system("uci set owrt-sensor-value.td28933.address='125.227.188.172'"):
             raise ValueError("Can't set option address")
 
-        if os.system("uci set owrt_sensor_value.td28933.oid='.1.3.6.1.4.1.25728.8800.1.1.2.1'"):
+        if os.system("uci set owrt-sensor-value.td28933.oid='.1.3.6.1.4.1.25728.8800.1.1.2.1'"):
             raise ValueError("Can't set option oid")
 
-        if os.system("uci set owrt_sensor_value.td28933.type_oid='Integer'"):
+        if os.system("uci set owrt-sensor-value.td28933.type_oid='Integer'"):
             raise ValueError("Can't set option type_oid")
 
-        if os.system("uci set owrt_sensor_value.td28933.port='31132'"):
+        if os.system("uci set owrt-sensor-value.td28933.port='31132'"):
             raise ValueError("Can't set option port")
 
-        if os.system("uci set owrt_sensor_value.td28933.timeout='3'"):
+        if os.system("uci set owrt-sensor-value.td28933.timeout='3'"):
             raise ValueError("Can't set option timeout")
 
-        if os.system("uci set owrt_sensor_value.td28933.period='1'"):
+        if os.system("uci set owrt-sensor-value.td28933.period='1'"):
             raise ValueError("Can't set option period")
 
-        if os.system("uci set owrt_sensor_value.td28933.period='1'"):
+        if os.system("uci set owrt-sensor-value.td28933.period='1'"):
             raise ValueError("Can't set option period")
 
-        if os.system("uci commit owrt_sensor_value"):
-            raise ValueError("Can't commit config owrt_sensor_value")
+        if os.system("uci commit owrt-sensor-value"):
+            raise ValueError("Can't commit config owrt-sensor-value")
 
         #send commit signal for module
-        if os.system("ubus send commit '{\"config\":\"owrt_sensor_value\"}'"):
-            raise ValueError("Can't send commit signal to owrt_sensor_value")
+        if os.system("ubus send commit '{\"config\":\"owrt-sensor-value\"}'"):
+            raise ValueError("Can't send commit signal to owrt-sensor-value")
 
         #wait for sensor getting value
         time.sleep(5)
 
         ubus.connect()
 
-        result = ubus.call('owrt_sensor_value', 'get_value', {"id_sensor":"td28933","ubus_rpc_session":"1"})[0]
+        result = ubus.call('owrt-sensor-value', 'get_value', {"id_sensor":"td28933","ubus_rpc_session":"1"})[0]
 
         ubus.disconnect()
 
@@ -149,8 +149,8 @@ def test_ubus_api():
         print(ex)
 
     #delete section from config
-    os.system("uci delete owrt_sensor_value.td28933")
-    os.system("uci commit owrt_sensor_value")
-    os.system("ubus send commit '{\"config\":\"owrt_sensor_value\"}'")
+    os.system("uci delete owrt-sensor-value.td28933")
+    os.system("uci commit owrt-sensor-value")
+    os.system("ubus send commit '{\"config\":\"owrt-sensor-value\"}'")
 
     assert ret
